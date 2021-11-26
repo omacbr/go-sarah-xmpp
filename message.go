@@ -3,7 +3,7 @@ package xmpp
 import (
 	"fmt"
 	"github.com/mattn/go-xmpp"
-	"github.com/oklahomer/go-sarah/v2"
+	"github.com/oklahomer/go-sarah/v4"
 	"strings"
 	"time"
 )

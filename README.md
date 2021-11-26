@@ -1,6 +1,9 @@
-This is a [sarah](https://github.com/oklahomer/go-sarah) ```Adapter``` implementation for XMPP / Jabber
+This is a fork  [sarah](https://github.com/oklahomer/go-sarah) ```Adapter``` implementation for XMPP / Jabber
 
 At present this is work in progress, and API may change without notice.
+
+
+Upgrade for go-sarah v4 and go 1.17
 
 # Getting Started
 Below is a minimal sample that describes how to setup and start XMPP Adapter.
@@ -10,29 +13,61 @@ Below is a minimal sample that describes how to setup and start XMPP Adapter.
 package main
 
 import (
-        "github.com/oklahomer/go-sarah"
-        "github.com/oklahomer/go-sarah-xmpp"
-        "golang.org/x/net/context"
-        "gopkg.in/yaml.v2"
-        "io/ioutil"
+	"fmt"
+	"github.com/omacbr/go-sarah-xmpp"
+	"io/ioutil"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/oklahomer/go-kasumi/logger"
+	"github.com/oklahomer/go-sarah/v4"
+	"golang.org/x/net/context"
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
-        // Setup configuration
-        configBuf, _ := ioutil.ReadFile("/path/to/adapter/config.yaml")
-        xmppConfig := xmpp.NewConfig()
-        yaml.Unmarshal(configBuf, xmppConfig)
+	// Setup configuration
+	configBuf, err := ioutil.ReadFile("config.yaml")
 
-        // Setup bot
-        xmppAdapter, _ := xmpp.NewAdapter(xmppConfig)
-        storage := sarah.NewUserContextStorage(sarah.NewCacheConfig())
-        xmppBot, _ := sarah.NewBot(xmppAdapter, sarah.BotWithStorage(storage))
-	
-        // Start
-        rootCtx := context.Background()
-        runnerCtx, _ := context.WithCancel(rootCtx)
-        runner, _ := sarah.NewRunner(sarah.NewConfig(), sarah.WithBot(xmppBot))
-        runner.Run(runnerCtx)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	xmppConfig := xmpp.NewConfig()
+
+	yaml.Unmarshal(configBuf, &xmppConfig)
+
+	// Setup bot
+	xmppAdapter, _ := xmpp.NewAdapter(xmppConfig)
+	storage := sarah.NewUserContextStorage(sarah.NewCacheConfig())
+
+	xmppBot := sarah.NewBot(xmppAdapter, sarah.BotWithStorage(storage))
+
+
+	sarah.RegisterBot(xmppBot)
+
+	// Start
+	rootCtx := context.Background()
+	runnerCtx, _ := context.WithCancel(rootCtx)
+
+	err = sarah.Run(runnerCtx, sarah.NewConfig())
+	if err != nil {
+		panic(err)
+	}
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
+
+	select {
+	case <-c:
+		logger.Info("Stopping due to signal reception.")
+		os.Exit(0)
+
+	}
+
+}
 }
 ```
 

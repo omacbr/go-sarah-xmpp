@@ -2,17 +2,20 @@ package xmpp
 
 import (
 	"crypto/tls"
-	"golang.org/x/xerrors"
 	"strings"
 	"time"
 
+	"golang.org/x/xerrors"
+
+	"github.com/labstack/gommon/log"
 	"github.com/mattn/go-xmpp"
-	"github.com/oklahomer/go-sarah/v2"
-	"github.com/oklahomer/go-sarah/v2/log"
+	"github.com/oklahomer/go-kasumi/logger"
+	"github.com/oklahomer/go-sarah/v4"
 
 	"context"
 	"fmt"
-	"github.com/oklahomer/go-sarah/retry"
+
+	"github.com/oklahomer/go-kasumi/retry"
 )
 
 const (
@@ -138,7 +141,7 @@ func (adapter *Adapter) Run(ctx context.Context, enqueueInput func(sarah.Input) 
 			return
 		}
 
-		log.Errorf("Will try re-connecting due to previous connection's fatal state: %s.", connErr.Error())
+		logger.Errorf("Will try re-connecting due to previous connection's fatal state: %s.", connErr.Error())
 	}
 }
 
@@ -165,7 +168,7 @@ func connect(config *Config) (*xmpp.Client, error) {
 	}
 
 	var client *xmpp.Client
-	err := retry.WithInterval(config.RetryLimit, func() (e error) {
+	err := retry.WithInterval(int(config.RetryLimit), func() (e error) {
 		client, e = options.NewClient()
 		return e
 	}, config.RetryInterval)

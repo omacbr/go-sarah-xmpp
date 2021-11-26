@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/mattn/go-xmpp"
-	"github.com/oklahomer/go-sarah/v2"
+	"github.com/oklahomer/go-sarah/v4"
 	"reflect"
 	"testing"
 	"time"
